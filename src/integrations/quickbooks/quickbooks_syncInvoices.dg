@@ -1,0 +1,89 @@
+/**
+ * Function : quickbooks_syncInvoices
+ * Trigger  : CRM Function — On Create (Invoices module) or Schedule
+ * Purpose  : Creates a QuickBooks invoice from a Zoho CRM deal/invoice record
+ * Author   : [Your Name]
+ * Version  : 1.0.0
+ * Updated  : [YYYY-MM-DD]
+ */
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+dealId      = input.get("dealId");
+dealName    = input.get("Deal_Name");
+accountName = input.get("Account_Name");
+amount      = input.get("Amount");
+closeDate   = input.get("Closing_Date");
+
+// ─── QB Config (use config.json in real implementation) ───────────────────────
+QB_REALM_ID     = "YOUR_QB_REALM_ID";
+QB_ACCESS_TOKEN = "YOUR_QB_ACCESS_TOKEN";
+QB_BASE_URL     = "https://quickbooks.api.intuit.com/v3/company/" + QB_REALM_ID;
+
+// ─── Find QB Customer by name ─────────────────────────────────────────────────
+searchUrl = QB_BASE_URL + "/query?query=SELECT * FROM Customer WHERE DisplayName = '" + accountName + "'&minorversion=65";
+
+headers = Map();
+headers.put("Authorization", "Bearer " + QB_ACCESS_TOKEN);
+headers.put("Accept", "application/json");
+
+customerResponse = invokeurl
+[
+    url: searchUrl
+    type: GET
+    headers: headers
+];
+
+customers = customerResponse.get("QueryResponse").get("Customer");
+
+if(customers == null || customers.size() == 0)
+{
+    return "ERROR: Customer not found in QuickBooks: " + accountName;
+}
+
+qbCustomerId = customers.get(0).get("Id");
+
+// ─── Build Invoice payload ────────────────────────────────────────────────────
+lineItem = Map();
+lineItem.put("Amount", amount);
+lineItem.put("DetailType", "SalesItemLineDetail");
+
+salesDetail = Map();
+salesDetail.put("UnitPrice", amount);
+salesDetail.put("Qty", 1);
+lineItem.put("SalesItemLineDetail", salesDetail);
+
+lines = List();
+lines.add(lineItem);
+
+customerRef = Map();
+customerRef.put("value", qbCustomerId);
+customerRef.put("name", accountName);
+
+invoicePayload = Map();
+invoicePayload.put("Line", lines);
+invoicePayload.put("CustomerRef", customerRef);
+invoicePayload.put("DueDate", closeDate);
+
+// ─── Create Invoice in QB ─────────────────────────────────────────────────────
+headers.put("Content-Type", "application/json");
+
+invoiceResponse = invokeurl
+[
+    url: QB_BASE_URL + "/invoice?minorversion=65"
+    type: POST
+    parameters: invoicePayload.toString()
+    headers: headers
+];
+
+qbInvoiceId = invoiceResponse.get("Invoice").get("Id");
+
+// ─── Update Zoho CRM record with QB Invoice ID ───────────────────────────────
+updateMap = Map();
+updateMap.put("QB_Invoice_ID", qbInvoiceId);
+zoho.crm.updateRecord("Deals", dealId, updateMap);
+
+// ─── Log ──────────────────────────────────────────────────────────────────────
+logMsg = "QB Invoice Created | ZohoDeal: " + dealId + " | QB Invoice: " + qbInvoiceId;
+zoho.cliq.postToChannel("zoho-logs", logMsg);
+
+return logMsg;

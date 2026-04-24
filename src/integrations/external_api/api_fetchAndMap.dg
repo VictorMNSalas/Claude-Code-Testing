@@ -1,0 +1,78 @@
+/**
+ * Function : api_fetchAndMap
+ * Trigger  : CRM Function / Schedule
+ * Purpose  : Generic template for fetching data from an external REST API
+ *            and mapping fields to a Zoho CRM module
+ * Author   : [Your Name]
+ * Version  : 1.0.0
+ * Updated  : [YYYY-MM-DD]
+ */
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+API_BASE_URL  = "https://api.external-system.com/v1";
+API_KEY       = "YOUR_API_KEY";
+TARGET_MODULE = "Contacts";  // Zoho CRM module to write to
+
+// ─── Build request headers ────────────────────────────────────────────────────
+headers = Map();
+headers.put("Authorization", "Bearer " + API_KEY);
+headers.put("Content-Type", "application/json");
+headers.put("Accept", "application/json");
+
+// ─── Fetch records from external API ─────────────────────────────────────────
+response = invokeurl
+[
+    url: API_BASE_URL + "/contacts?limit=100"
+    type: GET
+    headers: headers
+];
+
+externalRecords = response.get("data");
+
+if(externalRecords == null || externalRecords.size() == 0)
+{
+    return "No records returned from external API.";
+}
+
+// ─── Map and upsert to Zoho CRM ──────────────────────────────────────────────
+createdCount = 0;
+updatedCount = 0;
+failedCount  = 0;
+
+for each record in externalRecords
+{
+    // ── Field mapping: External API → Zoho CRM ──
+    crmRecord = Map();
+    crmRecord.put("First_Name",  record.get("first_name"));
+    crmRecord.put("Last_Name",   record.get("last_name"));
+    crmRecord.put("Email",       record.get("email"));
+    crmRecord.put("Phone",       record.get("phone"));
+    crmRecord.put("Account_Name", record.get("company"));
+
+    // ── Check if record exists by email ──
+    searchResult = zoho.crm.searchRecords(TARGET_MODULE, "(Email:equals:" + record.get("email") + ")");
+
+    try
+    {
+        if(searchResult.size() > 0)
+        {
+            existingId = searchResult.get(0).get("id");
+            zoho.crm.updateRecord(TARGET_MODULE, existingId, crmRecord);
+            updatedCount = updatedCount + 1;
+        }
+        else
+        {
+            zoho.crm.createRecord(TARGET_MODULE, crmRecord);
+            createdCount = createdCount + 1;
+        }
+    }
+    catch(e)
+    {
+        failedCount = failedCount + 1;
+    }
+}
+
+// ─── Return summary ───────────────────────────────────────────────────────────
+summary = "Sync complete | Created: " + createdCount + " | Updated: " + updatedCount + " | Failed: " + failedCount;
+zoho.cliq.postToChannel("zoho-logs", summary);
+return summary;

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice Viewer Widget</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="widget-header">
+      <h2>Invoice Viewer</h2>
+      <span id="status-badge" class="badge">Loading...</span>
+    </header>
+
+    <section id="invoice-details" class="card">
+      <div class="field-row">
+        <span class="label">Invoice #</span>
+        <span id="invoice-number" class="value">—</span>
+      </div>
+      <div class="field-row">
+        <span class="label">Customer</span>
+        <span id="customer-name" class="value">—</span>
+      </div>
+      <div class="field-row">
+        <span class="label">Amount</span>
+        <span id="invoice-amount" class="value">—</span>
+      </div>
+      <div class="field-row">
+        <span class="label">Due Date</span>
+        <span id="due-date" class="value">—</span>
+      </div>
+      <div class="field-row">
+        <span class="label">QB Invoice ID</span>
+        <span id="qb-id" class="value">—</span>
+      </div>
+    </section>
+
+    <footer class="widget-footer">
+      <button id="open-qb-btn" class="btn-primary" disabled>Open in QuickBooks</button>
+      <button id="refresh-btn" class="btn-secondary">Refresh</button>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

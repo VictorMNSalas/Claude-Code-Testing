@@ -1,0 +1,58 @@
+{
+  "blueprint": {
+    "name": "deals_blueprint_salesProcess",
+    "module": "Deals",
+    "description": "Standard sales process blueprint for deal progression",
+    "field": "Stage",
+    "stages": [
+      {
+        "name": "Qualification",
+        "sequence": 1,
+        "transitions": ["Needs Analysis"],
+        "required_fields": ["Amount", "Contact_Name"],
+        "actions_before": [],
+        "actions_after": ["leads_onCreate_assignOwner"]
+      },
+      {
+        "name": "Needs Analysis",
+        "sequence": 2,
+        "transitions": ["Proposal", "Closed Lost"],
+        "required_fields": ["Description"],
+        "actions_before": [],
+        "actions_after": []
+      },
+      {
+        "name": "Proposal",
+        "sequence": 3,
+        "transitions": ["Negotiation", "Closed Lost"],
+        "required_fields": ["Amount", "Closing_Date"],
+        "actions_before": [],
+        "actions_after": ["deals_onUpdate_notifySlack"]
+      },
+      {
+        "name": "Negotiation",
+        "sequence": 4,
+        "transitions": ["Closed Won", "Closed Lost"],
+        "required_fields": [],
+        "actions_before": [],
+        "actions_after": []
+      },
+      {
+        "name": "Closed Won",
+        "sequence": 5,
+        "transitions": [],
+        "required_fields": ["Amount"],
+        "actions_before": [],
+        "actions_after": ["daily_syncQuickBooks"]
+      },
+      {
+        "name": "Closed Lost",
+        "sequence": 6,
+        "transitions": [],
+        "required_fields": ["Lost_Reason"],
+        "actions_before": [],
+        "actions_after": []
+      }
+    ]
+  }
+}

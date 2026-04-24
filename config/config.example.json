@@ -1,0 +1,43 @@
+{
+  "environment": "sandbox",
+
+  "zoho": {
+    "crm": {
+      "base_url": "https://www.zohoapis.com/crm/v6",
+      "org_id": "YOUR_ORG_ID",
+      "client_id": "YOUR_ZOHO_CLIENT_ID",
+      "client_secret": "YOUR_ZOHO_CLIENT_SECRET",
+      "refresh_token": "YOUR_ZOHO_REFRESH_TOKEN",
+      "access_token_url": "https://accounts.zoho.com/oauth/v2/token"
+    }
+  },
+
+  "quickbooks": {
+    "base_url": "https://sandbox-quickbooks.api.intuit.com",
+    "realm_id": "YOUR_QB_REALM_ID",
+    "client_id": "YOUR_QB_CLIENT_ID",
+    "client_secret": "YOUR_QB_CLIENT_SECRET",
+    "refresh_token": "YOUR_QB_REFRESH_TOKEN",
+    "access_token_url": "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
+  },
+
+  "webhooks": {
+    "secret": "YOUR_WEBHOOK_SECRET",
+    "endpoints": {
+      "inbound": "https://your-domain.com/webhooks/zoho",
+      "outbound": "https://your-domain.com/webhooks/external"
+    }
+  },
+
+  "logging": {
+    "enabled": true,
+    "level": "info",
+    "module_name": "YOUR_PROJECT_NAME"
+  },
+
+  "feature_flags": {
+    "enable_sync": true,
+    "enable_notifications": false,
+    "dry_run": true
+  }
+}

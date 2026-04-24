@@ -1,0 +1,46 @@
+/**
+ * Function : leads_onCreate_assignOwner
+ * Trigger  : CRM Function — On Create (Leads module)
+ * Purpose  : Assigns a lead owner based on territory/source rules
+ * Author   : [Your Name]
+ * Version  : 1.0.0
+ * Updated  : [YYYY-MM-DD]
+ */
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+leadId    = input.get("leadId");
+leadOwner = input.get("lead_owner");
+leadState = input.get("State");
+leadSource = input.get("Lead_Source");
+
+// ─── Territory mapping ────────────────────────────────────────────────────────
+territoryMap = Map();
+territoryMap.put("California", "owner_zoho_id_001");
+territoryMap.put("Texas",      "owner_zoho_id_002");
+territoryMap.put("Florida",    "owner_zoho_id_003");
+
+// ─── Assign owner ─────────────────────────────────────────────────────────────
+assignedOwner = territoryMap.get(leadState);
+
+if(assignedOwner == null)
+{
+    // Default fallback owner
+    assignedOwner = "owner_zoho_id_default";
+}
+
+// ─── Update record ────────────────────────────────────────────────────────────
+updateMap = Map();
+updateMap.put("Owner", assignedOwner);
+
+response = zoho.crm.updateRecord("Leads", leadId, updateMap);
+
+// ─── Log result ───────────────────────────────────────────────────────────────
+logMap = Map();
+logMap.put("function", "leads_onCreate_assignOwner");
+logMap.put("leadId", leadId);
+logMap.put("assignedOwner", assignedOwner);
+logMap.put("status", "success");
+
+zoho.cliq.postToChannel("zoho-logs", logMap.toString());
+
+return "Owner assigned: " + assignedOwner;

@@ -1,0 +1,48 @@
+{
+  "workflow": {
+    "name": "deals_fieldUpdate_stageChange",
+    "module": "Deals",
+    "description": "Updates Close Date and triggers function when Deal Stage changes",
+    "status": "Active",
+    "trigger": {
+      "type": "Field Update",
+      "field": "Stage",
+      "execute_on": ["Create", "Edit"]
+    },
+    "conditions": {
+      "criteria_pattern": "1 AND 2",
+      "conditions": [
+        {
+          "id": 1,
+          "field": "Stage",
+          "operator": "changed",
+          "value": null
+        },
+        {
+          "id": 2,
+          "field": "Amount",
+          "operator": "greater_than",
+          "value": 0
+        }
+      ]
+    },
+    "actions": [
+      {
+        "type": "Field Update",
+        "name": "Set Close Date on Stage Change",
+        "field_updates": [
+          {
+            "field": "Closing_Date",
+            "type": "absolute",
+            "value": "today + 30 days"
+          }
+        ]
+      },
+      {
+        "type": "Function",
+        "name": "deals_onUpdate_notifySlack",
+        "function_name": "deals_onUpdate_notifySlack"
+      }
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+/**
+ * Schedule  : daily_syncQuickBooks
+ * Frequency : Daily — 02:00 AM
+ * Purpose   : Syncs Zoho CRM Accounts/Invoices with QuickBooks Online
+ * Author    : [Your Name]
+ * Version   : 1.0.0
+ * Updated   : [YYYY-MM-DD]
+ */
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+QB_REALM_ID     = "YOUR_QB_REALM_ID";
+QB_ACCESS_TOKEN = "YOUR_QB_ACCESS_TOKEN";
+QB_BASE_URL     = "https://quickbooks.api.intuit.com/v3/company/" + QB_REALM_ID;
+
+// ─── Fetch Zoho Accounts modified in last 24h ─────────────────────────────────
+searchCriteria = "(Modified_Time:greater_than:yesterday)";
+accounts = zoho.crm.searchRecords("Accounts", searchCriteria, 1, 200);
+
+syncedCount  = 0;
+failedCount  = 0;
+failedIds    = List();
+
+for each account in accounts
+{
+    accountId   = account.get("id");
+    accountName = account.get("Account_Name");
+    email       = account.get("Email");
+
+    // ─── Build QB Customer payload ─────────────────────────────────────────
+    qbCustomer = Map();
+    qbCustomer.put("DisplayName", accountName);
+    qbCustomer.put("PrimaryEmailAddr", Map("Address", email));
+
+    headers = Map();
+    headers.put("Authorization", "Bearer " + QB_ACCESS_TOKEN);
+    headers.put("Content-Type", "application/json");
+    headers.put("Accept", "application/json");
+
+    response = invokeurl
+    [
+        url: QB_BASE_URL + "/customer"
+        type: POST
+        parameters: qbCustomer.toString()
+        headers: headers
+    ];
+
+    if(response.get("Customer") != null)
+    {
+        syncedCount = syncedCount + 1;
+    }
+    else
+    {
+        failedCount = failedCount + 1;
+        failedIds.add(accountId);
+    }
+}
+
+// ─── Log summary ──────────────────────────────────────────────────────────────
+summary = "QB Sync Complete | Synced: " + syncedCount + " | Failed: " + failedCount;
+zoho.cliq.postToChannel("zoho-logs", summary);
+
+if(failedCount > 0)
+{
+    zoho.cliq.postToChannel("zoho-alerts", "Failed IDs: " + failedIds.toString());
+}
+
+return summary;

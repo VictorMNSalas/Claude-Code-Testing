@@ -1,0 +1,56 @@
+/**
+ * Function : deals_onUpdate_notifySlack
+ * Trigger  : CRM Function — On Edit (Deals module)
+ * Purpose  : Sends Slack notification when a deal stage changes
+ * Author   : [Your Name]
+ * Version  : 1.0.0
+ * Updated  : [YYYY-MM-DD]
+ */
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+dealId      = input.get("dealId");
+dealName    = input.get("Deal_Name");
+newStage    = input.get("Stage");
+dealAmount  = input.get("Amount");
+ownerEmail  = input.get("Owner").get("email");
+
+// ─── Build Slack payload ──────────────────────────────────────────────────────
+slackWebhookUrl = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK";
+
+message = Map();
+message.put("text", "*Deal Stage Updated*");
+
+attachment = Map();
+attachment.put("color", "#36a64f");
+attachment.put("title", dealName);
+
+fields = List();
+
+stageField = Map();
+stageField.put("title", "New Stage");
+stageField.put("value", newStage);
+stageField.put("short", true);
+fields.add(stageField);
+
+amountField = Map();
+amountField.put("title", "Amount");
+amountField.put("value", "$" + dealAmount);
+amountField.put("short", true);
+fields.add(amountField);
+
+attachment.put("fields", fields);
+
+attachments = List();
+attachments.add(attachment);
+message.put("attachments", attachments);
+
+// ─── Send notification ────────────────────────────────────────────────────────
+response = invokeurl
+[
+    url: slackWebhookUrl
+    type: POST
+    parameters: message.toString()
+    headers: {"Content-Type": "application/json"}
+];
+
+return response;

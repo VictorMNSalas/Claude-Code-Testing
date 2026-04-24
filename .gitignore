@@ -1,12 +1,32 @@
-# Dependencies
-node_modules/
+# ─── Environment & Credentials ───────────────────────────────────────────────
+config/config.sandbox.json
+config/config.production.json
 .env
-.env.local
+.env.*
+!.env.example
 
-# OS
+# ─── Logs ────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# IDE
+# ─── IDE / Editors ───────────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# ─── Node (for Widget dev / test runners) ────────────────────────────────────
+node_modules/
+package-lock.json
+dist/
+build/
+
+# ─── Temporary / Testing artifacts ───────────────────────────────────────────
+*.tmp
+*.bak
+coverage/
